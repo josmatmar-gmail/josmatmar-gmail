@@ -937,6 +937,12 @@ getValueForKeyInJson() {
         return 1;
     }
 
+    printf '%s' "$gvfkij_metadataValueCleanTemp" | grep -q '^[a-zA-Z0-9 _\-\.\:\,\/\(\)]*$' || {
+        outputToLogFile "ERROR: \`getValueForKeyInJson()\` \`[***]\` found special characters in \`$gvfkij_parameter_2\` metadata value in JSON value";
+
+        return 1;
+    }
+
     printf "%s" "$gvfkij_metadataValueCleanTemp"
 
     return 0
@@ -970,8 +976,6 @@ getMetadataValueMatrixInJson() {
     gmvmij_requiredValuesMatrixTemp=""
 
     for gmvmij_metadataKey in "${metadataarray[@]}"; do
-        showProgress
-
         local gmvmij_metadataValue
 
         gmvmij_metadataValue=$(getValueForKeyInJson "$gmvmij_parameter_1" "$gmvmij_metadataKey")
@@ -1013,7 +1017,7 @@ getMetadataValueMatrixInJson() {
         fi
 
         {
-            gmvmij_requiredValuesMatrixTemp="${gmvmij_requiredValuesMatrixTemp}${gmvmij_metadataValue}|"
+            gmvmij_requiredValuesMatrixTemp="${gmvmij_requiredValuesMatrixTemp}${gmvmij_metadataValue}^^"
         } || {
             outputToLogFile "ERROR: \`getMetadataValueMatrixInJson()\` failed to add \`$gmvmij_metadataValue\` metadata value to metadataValueMatrix from \`[***]\` JSON value"
 
@@ -1022,7 +1026,7 @@ getMetadataValueMatrixInJson() {
     done
 
     {
-        gmvmij_requiredValuesMatrixTemp="${gmvmij_requiredValuesMatrixTemp}${gmvmij_learnMoreLinkTitleTemp}|"
+        gmvmij_requiredValuesMatrixTemp="${gmvmij_requiredValuesMatrixTemp}${gmvmij_learnMoreLinkTitleTemp}^^"
     } || {
         outputToLogFile "ERROR: \`getMetadataValueMatrixInJson()\` failed to add \`$gmvmij_learnMoreLinkTitleTemp\` learnMoreLink title to metadataValueMatrix from \`[***]\` JSON value"
 
@@ -1060,12 +1064,6 @@ getFileMetadataValueMatrix() {
         return 1;
     }
 
-    if [[ "$gfmvm_parameter_1" == *"|"* ]]; then
-        outputToLogFile "ERROR: \`getFileMetadataValueMatrix()\` \`$gfmvm_parameter_1\` file path contains a pipe character";
-
-        return 1;
-    fi
-
     {
         gfmvm_metadataValueMatrixTemp=$(getMetadataValueMatrixInJson "$gfmvm_jsonInput");
     } || {
@@ -1083,7 +1081,7 @@ getFileMetadataValueMatrix() {
     outputToLogFile "getFileMetadataValueMatrix() \`$gfmvm_parameter_1\` file has \`$gfmvm_metadataValueMatrixTemp\` metadataValueMatrix value"; # debug
 
     {
-        gfmvm_fileMetadataValueMatrixTemp=$(printf "%s|%s" "$gfmvm_parameter_1" "$gfmvm_metadataValueMatrixTemp");
+        gfmvm_fileMetadataValueMatrixTemp=$(printf "%s^^%s" "$gfmvm_parameter_1" "$gfmvm_metadataValueMatrixTemp");
     } || {
         outputToLogFile "ERROR: \`getFileMetadataValueMatrix()\` failed to create fileMetadataMatrix from \`$gfmvm_parameter_1\` file";
 
@@ -1914,7 +1912,7 @@ createIncludeBodySectionsFromActiveArrays() {
                 continue;
             }
 
-            cibsfaa_categoryServiceBodyMatrixTemp=$(printf "%s|%s|%s" "$cibsfaa_categoryTemp" "$cibsfaa_serviceTemp" "$cibsfaa_bodySectionTemp")
+            cibsfaa_categoryServiceBodyMatrixTemp=$(printf "%s^^%s^^%s^^" "$cibsfaa_categoryTemp" "$cibsfaa_serviceTemp" "$cibsfaa_bodySectionTemp")
 
             cibsfaa_normalizedCategoryTemp=$(normalizeString "$cibsfaa_categoryTemp") || {
                 outputToLogFile "ERROR: \`createIncludeBodySectionsFromActiveArrays()\` failed to normalize \`$cibsfaa_categoryTemp\` category";
@@ -2180,7 +2178,6 @@ createIncludeFilesFromCategoryServiceArray() {
                 continue;
             }
 
-            # Ensure outputIncludesDirectory exists before writing
             [[ -d "$outputIncludesDirectory" ]] || mkdir -p "$outputIncludesDirectory"
 
             cifcsa_outputFileNameTemp=$(printf "%s/%s-%s.md" "$outputIncludesDirectory" "$cifcsa_categoryTemp" "$cifcsa_serviceTemp") || {
@@ -2377,8 +2374,6 @@ createCoverageOfServicesSection() {
         local ccos_yearTemp
         local ccos_yearHeadingTemp
         local ccos_yearMonthSectionTemp
-
-        showProgress
 
         [[ "$ccos_dateItemTemp" != "MISSING" ]] || continue
 
