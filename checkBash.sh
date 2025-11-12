@@ -12,35 +12,35 @@ dateStamp=$(printf "%s" "$(date +%Y%b%d-%H)00")
 debug="0"
 
 main() {
-    currentDirectory=$(pwd)
+    local currentDirectory=$(pwd)
 
-    cd $scriptsDirectory
+    cd $scriptDirectory
 
     sudo apt update -y
-    sudo apt upgrade -y
+    apt list --upgradeable || sudo apt upgrade -y
 
     for item in ${arrayCheck[@]}; do
-        printf "%s" "checking for \`$item\`... "
+        printf "%s" "checking for \`$item\`..."
 
-        tempCommand="$item --version"
+        local tempCommand="$item --version"
 
-        if $tempCommand &> /dev/null ; then
-            printf "%s\n" "found"
+        $tempCommand &>/dev/null && {
+            printf "\t%s\n" "found";
+
             if [[ "$debug" -gt "0" ]]; then
                 printf "%s\n> " "---"
 
                 $item --version
 
                 printf "%s\n" "---"
-            fi
-        else
-            printf "\t%s\n" "not found"
-        fi
+            fi;
+        } || {
+            printf "\t%s\n" "not found";
+        }
     done
 
-    if $windowsProfile$scriptsDirectory &> /dev/null ; then
-        mkdir $windowsProfile$scriptsDirectory/output
-    fi
+    [[ -d "$scriptDirectory" ]] || mkdir "$scriptDirectory";
+    [[ -d "$outputDirectory" ]] || mkdir "$outputDirectory";
 
     sudo apt autoremove -y
 
